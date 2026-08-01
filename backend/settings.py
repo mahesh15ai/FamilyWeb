@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "django_filters",
     "corsheaders",
+    "apps.membership",
 
     # Local Apps
     "apps.accounts",

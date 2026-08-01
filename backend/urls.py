@@ -10,12 +10,11 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-
     path("api/auth/", include("apps.accounts.urls")),
     path("api/families/", include("apps.families.urls")),
+    path("api/members/", include("apps.membership.urls")),   # add this
     path("api-auth/", include("rest_framework.urls")),
 
-    # Swagger / OpenAPI docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),

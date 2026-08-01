@@ -1,6 +1,8 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
+from apps.membership.services import create_owner_membership
+
 from .models import Family
 
 
@@ -13,7 +15,9 @@ def create_family(*, user, validated_data: dict) -> Family:
         raise ValidationError(
             {"detail": _("You have already created a family. Each user can create only one.")}
         )
-    return Family.objects.create(created_by=user, **validated_data)
+    family = Family.objects.create(created_by=user, **validated_data)
+    create_owner_membership(user=user, family=family)
+    return family
 
 
 def update_family(*, family: Family, user, validated_data: dict) -> Family:
