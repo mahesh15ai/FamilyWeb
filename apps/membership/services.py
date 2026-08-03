@@ -16,6 +16,14 @@ def create_owner_membership(*, user, family) -> FamilyMembership:
     return FamilyMembership.objects.create(user=user, family=family, role=RoleChoices.OWNER)
 
 
+def create_member_membership(*, user, family) -> FamilyMembership:
+    """
+    Called when a join request is approved.
+    Gives the joining user a plain MEMBER membership.
+    """
+    return FamilyMembership.objects.create(user=user, family=family, role=RoleChoices.MEMBER)
+
+
 def list_family_members(*, family):
     return FamilyMembership.objects.filter(family=family)
 
@@ -25,6 +33,14 @@ def _get_actor_membership_or_raise(*, actor, family):
     if not membership or membership.role not in [RoleChoices.OWNER, RoleChoices.SUPER_ADMIN]:
         raise PermissionDenied(_("Only the owner or a super admin can perform this action."))
     return membership
+
+
+def require_admin_membership(*, actor, family) -> FamilyMembership:
+    """
+    Public wrapper so other apps (e.g. joinrequests) can reuse the same
+    owner/super-admin permission check without reaching into a private helper.
+    """
+    return _get_actor_membership_or_raise(actor=actor, family=family)
 
 
 def update_member_role(*, actor, membership: FamilyMembership, new_role: str) -> FamilyMembership:

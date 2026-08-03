@@ -13,6 +13,7 @@ urlpatterns = [
     path("api/auth/", include("apps.accounts.urls")),
     path("api/families/", include("apps.families.urls")),
     path("api/members/", include("apps.membership.urls")),   # add this
+    path("api/join-requests/", include("apps.joinrequests.urls")),   # added on Day 5
     path("api-auth/", include("rest_framework.urls")),
 
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
-from apps.membership.services import create_owner_membership
+from apps.membership.services import create_owner_membership, get_membership_for_user
 
 from .models import Family
 
@@ -9,11 +9,17 @@ from .models import Family
 def create_family(*, user, validated_data: dict) -> Family:
     """
     Creates a new family. created_by is always the logged-in user —
-    never taken from the request body. A user may create at most one family.
+    never taken from the request body.
+
+    A user may belong to only one family, whether as its owner or as a
+    member of someone else's — so we check FamilyMembership (the real
+    source of truth for "which family is this user in"), not just
+    Family.created_by. This also blocks family creation for someone who
+    already joined another family as a plain member.
     """
-    if Family.objects.filter(created_by=user).exists():
+    if get_membership_for_user(user=user):
         raise ValidationError(
-            {"detail": _("You have already created a family. Each user can create only one.")}
+            {"detail": _("You're already part of a family. Leave your current family before creating a new one.")}
         )
     family = Family.objects.create(created_by=user, **validated_data)
     create_owner_membership(user=user, family=family)
@@ -38,4 +44,10 @@ def delete_family(*, family: Family, user) -> None:
 
 
 def get_my_family(*, user) -> Family | None:
-    return Family.objects.filter(created_by=user).first()
+    """
+    Returns the family the user belongs to — whether they created it
+    (owner) or joined it as a member — via their FamilyMembership row,
+    not just Family.created_by.
+    """
+    membership = get_membership_for_user(user=user)
+    return membership.family if membership else None

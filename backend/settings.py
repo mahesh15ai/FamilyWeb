@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     # Local Apps
     "apps.accounts",
     "apps.families",
-    # "apps.families",   # will be uncommented on Day 3
+    "apps.joinrequests",   # added on Day 5
 ]
 
 # ==========================
