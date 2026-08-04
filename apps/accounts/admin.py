@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
-from .models import User
+from .models import PasswordResetOTP, User
 
 
 @admin.register(User)
@@ -33,3 +33,11 @@ class UserAdmin(DjangoUserAdmin):
             "fields": ("email", "first_name", "last_name", "password1", "password2"),
         }),
     )
+
+
+@admin.register(PasswordResetOTP)
+class PasswordResetOTPAdmin(admin.ModelAdmin):
+    list_display = ["user", "is_used", "expires_at", "created_at"]
+    list_filter = ["is_used"]
+    search_fields = ["user__email"]
+    readonly_fields = ["otp_hash", "created_at"]

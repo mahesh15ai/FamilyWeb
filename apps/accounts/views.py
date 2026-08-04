@@ -10,12 +10,14 @@ from rest_framework.views import APIView
 from . import services
 from .serializers import (
     ChangePasswordSerializer,
+    ForgotPasswordSerializer,
     LoginSerializer,
     LogoutSerializer,
     ProfileSerializer,
     ProfileUpdateSerializer,
     RegisterResponseSerializer,
     RegisterSerializer,
+    ResetPasswordSerializer,
 )
 
 
@@ -138,3 +140,47 @@ class ChangePasswordAPIView(GenericAPIView):
             user=request.user, new_password=serializer.validated_data["new_password"]
         )
         return Response({"message": _("Password changed successfully.")}, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    tags=["Authentication"],
+    summary="Forgot password",
+    description=(
+        "Sends a 6-digit reset code to the given email if an account exists. "
+        "Always returns success — doesn't reveal whether the email is registered."
+    ),
+    request=ForgotPasswordSerializer,
+)
+class ForgotPasswordAPIView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = ForgotPasswordSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        services.request_password_reset(email=serializer.validated_data["email"])
+        return Response(
+            {"message": _("If an account exists for this email, a reset code has been sent.")},
+            status=status.HTTP_200_OK,
+        )
+
+
+@extend_schema(
+    tags=["Authentication"],
+    summary="Reset password",
+    description="Confirms the OTP sent via forgot-password and sets a new password.",
+    request=ResetPasswordSerializer,
+)
+class ResetPasswordAPIView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = ResetPasswordSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        services.confirm_password_reset(
+            email=serializer.validated_data["email"],
+            otp=serializer.validated_data["otp"],
+            new_password=serializer.validated_data["new_password"],
+        )
+        return Response({"message": _("Password reset successfully. You can now log in.")}, status=status.HTTP_200_OK)

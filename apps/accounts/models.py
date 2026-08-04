@@ -80,3 +80,28 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+
+
+class PasswordResetOTP(models.Model):
+    """
+    A short-lived, single-use one-time code emailed to a user who has
+    forgotten their password. The raw OTP is never stored — only its
+    hash — same principle as password storage.
+    """
+
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="password_reset_otps"
+    )
+    otp_hash = models.CharField(max_length=128)
+    is_used = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "password_reset_otps"
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["user", "is_used"])]
+
+    def __str__(self):
+        return f"OTP for {self.user.email} (used={self.is_used})"

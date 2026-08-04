@@ -132,3 +132,31 @@ class ChangePasswordSerializer(serializers.Serializer):
                 {"new_password": _("New password must be different from the old password.")}
             )
         return attrs
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        return value.lower().strip()
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6, min_length=6)
+    new_password = serializers.CharField(write_only=True, style={"input_type": "password"})
+    confirm_password = serializers.CharField(write_only=True, style={"input_type": "password"})
+
+    def validate_email(self, value):
+        return value.lower().strip()
+
+    def validate_new_password(self, value):
+        validate_password_strength(value)
+        return value
+
+    def validate(self, attrs):
+        if attrs["new_password"] != attrs["confirm_password"]:
+            raise serializers.ValidationError(
+                {"confirm_password": _("Passwords do not match.")}
+            )
+        return attrs

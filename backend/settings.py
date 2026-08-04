@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.families",
     "apps.joinrequests",   # added on Day 5
+    "apps.familytree", 
 ]
 
 # ==========================
@@ -225,6 +226,25 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
 }
+
+# ==========================
+# EMAIL
+# ==========================
+# Console backend for local dev — OTP emails print straight to the
+# terminal running `runserver`, no real SMTP setup needed to test.
+# Switch EMAIL_BACKEND to 'django.core.mail.backends.smtp.EmailBackend'
+# and fill in the EMAIL_* values in .env for real email delivery
+# (e.g. Gmail SMTP, SendGrid, etc.).
+
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_HOST = config("EMAIL_HOST", default="")
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@familyhub.local")
 
 # ==========================
 # SWAGGER / OPENAPI
