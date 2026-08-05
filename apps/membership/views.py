@@ -1,5 +1,5 @@
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -74,3 +74,25 @@ class RoleListAPIView(APIView):
             [{"value": choice.value, "label": choice.label} for choice in RoleChoices],
             status=status.HTTP_200_OK,
         )
+
+
+@extend_schema(
+    tags=["Membership"],
+    summary="Search members in my family",
+    parameters=[
+        OpenApiParameter(
+            name="q",
+            description="Search by first name, last name, or email",
+            required=False,
+            type=OpenApiTypes.STR,
+        )
+    ],
+    responses={200: MembershipSerializer(many=True)},
+)
+class MemberSearchAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        query = request.query_params.get("q", "")
+        members = services.search_family_members(actor=request.user, query=query)
+        return Response(MembershipSerializer(members, many=True).data, status=status.HTTP_200_OK)

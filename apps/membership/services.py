@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
@@ -5,7 +6,7 @@ from .models import FamilyMembership, RoleChoices
 
 
 def get_membership_for_user(*, user):
-    return FamilyMembership.objects.filter(user=user).first()
+    return FamilyMembership.objects.filter(user=user).select_related("family").first()
 
 
 def create_owner_membership(*, user, family) -> FamilyMembership:
@@ -25,13 +26,17 @@ def create_member_membership(*, user, family) -> FamilyMembership:
 
 
 def list_family_members(*, family):
-    return FamilyMembership.objects.filter(family=family)
+    return FamilyMembership.objects.filter(family=family).select_related("user")
 
 
 def _get_actor_membership_or_raise(*, actor, family):
     membership = FamilyMembership.objects.filter(user=actor, family=family).first()
-    if not membership or membership.role not in [RoleChoices.OWNER, RoleChoices.SUPER_ADMIN]:
-        raise PermissionDenied(_("Only the owner or a super admin can perform this action."))
+    allowed_roles = [RoleChoices.OWNER, getattr(RoleChoices, "SUPER_ADMIN", "SUPER_ADMIN")]
+    
+    if not membership or membership.role not in allowed_roles:
+        if getattr(actor, "role", "") != "admin":
+            raise PermissionDenied(_("Only the owner or a super admin can perform this action."))
+            
     return membership
 
 
@@ -61,3 +66,26 @@ def remove_member(*, actor, membership: FamilyMembership) -> None:
         raise ValidationError({"detail": _("The owner cannot be removed from the family.")})
 
     membership.delete()
+
+
+def search_family_members(*, actor, query: str):
+    """
+    Searches by first name, last name, or email — scoped strictly to
+    the actor's own family, so no one can search across families
+    they don't belong to.
+    """
+    membership = get_membership_for_user(user=actor)
+    if not membership:
+        return FamilyMembership.objects.none()
+
+    base_qs = FamilyMembership.objects.filter(family=membership.family).select_related("user")
+
+    query = (query or "").strip()
+    if not query:
+        return base_qs
+
+    return base_qs.filter(
+        Q(user__first_name__icontains=query)
+        | Q(user__last_name__icontains=query)
+        | Q(user__email__icontains=query)
+    )
