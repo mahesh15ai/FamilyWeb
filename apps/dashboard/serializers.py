@@ -39,22 +39,10 @@ class UpcomingEventsSerializer(serializers.Serializer):
 
 class BirthdayItemSerializer(serializers.Serializer):
     member = serializers.CharField()
-    birthday = serializers.DateField()
-
-
-class BirthdaysSerializer(serializers.Serializer):
-    count = serializers.IntegerField()
-    results = BirthdayItemSerializer(many=True)
-    
-from rest_framework import serializers
-
-
-class BirthdayItemSerializer(serializers.Serializer):
-    member = serializers.CharField()
     birthday = serializers.CharField()
 
 
 class BirthdaysSerializer(serializers.Serializer):
     count = serializers.IntegerField()
-    today = BirthdayItemSerializer(many=True)  # <-- REQUIRED
+    today = BirthdayItemSerializer(many=True)
     results = BirthdayItemSerializer(many=True)

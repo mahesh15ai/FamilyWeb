@@ -56,7 +56,8 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.families",
     "apps.joinrequests",   # added on Day 5
-    "apps.familytree", 
+    "apps.familytree",
+    "apps.posts", 
 ]
 
 # ==========================

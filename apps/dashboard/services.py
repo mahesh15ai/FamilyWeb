@@ -23,6 +23,16 @@ def get_user_family(user):
     return membership.family if membership else None
 
 
+def _display_name(user):
+    """
+    Safe display name for any user — never calls get_full_name(), which
+    doesn't exist on our custom User model (it extends AbstractBaseUser,
+    not AbstractUser). Falls back to the email's local part.
+    """
+    full_name = getattr(user, "full_name", "") or ""
+    return full_name.strip() or user.email.split("@")[0]
+
+
 def get_overview_data(family):
     if not family:
         return {
@@ -71,9 +81,8 @@ def get_recent_activities_data(family):
     if Post:
         posts = Post.objects.filter(family=family).select_related("author").order_by("-created_at")[:10]
         for p in posts:
-            author_name = getattr(p.author, 'full_name', None) or getattr(p.author, 'username', str(p.author))
             activities.append({
-                "actor": author_name,
+                "actor": _display_name(p.author),
                 "action": f'posted "{p.content[:25]}..."' if getattr(p, 'content', None) else "created a post",
                 "timestamp": getattr(p, 'created_at', timezone.now()),
             })
@@ -81,9 +90,8 @@ def get_recent_activities_data(family):
     if not activities:
         memberships = membership_services.list_family_members(family=family).order_by("-joined_at")[:5]
         for m in memberships:
-            user_name = getattr(m.user, 'full_name', None) or m.user.email.split("@")[0]
             activities.append({
-                "actor": user_name,
+                "actor": _display_name(m.user),
                 "action": "joined the family workspace",
                 "timestamp": getattr(m, 'joined_at', timezone.now()),
             })
@@ -109,13 +117,13 @@ def get_upcoming_birthdays_data(family):
     today = timezone.now().date()
     thirty_days_later = today + timedelta(days=30)
     memberships = membership_services.list_family_members(family=family)
-    
+
     upcoming_birthdays = []
     today_birthdays = []
 
     for m in memberships:
-        dob = getattr(m.user, "date_of_birth", None) or getattr(m.user, "birthday", None)
-        user_name = getattr(m.user, "full_name", None) or m.user.get_full_name() or m.user.email.split("@")[0]
+        dob = getattr(m.user, "date_of_birth", None)
+        user_name = _display_name(m.user)
 
         if dob:
             try:

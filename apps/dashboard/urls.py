@@ -8,10 +8,12 @@ from .views import (
     DashboardUpcomingEventsAPIView,
 )
 
+app_name = "dashboard"
+
 urlpatterns = [
-    path("", DashboardOverviewAPIView.as_view(), name="dashboard-overview"),
-    path("statistics/", DashboardStatisticsAPIView.as_view(), name="dashboard-statistics"),
-    path("recent-activities/", DashboardRecentActivitiesAPIView.as_view(), name="dashboard-recent-activities"),
-    path("upcoming-events/", DashboardUpcomingEventsAPIView.as_view(), name="dashboard-upcoming-events"),
-    path("birthdays/", DashboardBirthdaysAPIView.as_view(), name="dashboard-birthdays"),
+    path("", DashboardOverviewAPIView.as_view(), name="overview"),
+    path("statistics/", DashboardStatisticsAPIView.as_view(), name="statistics"),
+    path("recent-activities/", DashboardRecentActivitiesAPIView.as_view(), name="recent-activities"),
+    path("upcoming-events/", DashboardUpcomingEventsAPIView.as_view(), name="upcoming-events"),
+    path("birthdays/", DashboardBirthdaysAPIView.as_view(), name="birthdays"),
 ]
