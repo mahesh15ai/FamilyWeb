@@ -23,11 +23,12 @@ SECRET_KEY = config(
 
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = config(
-    "ALLOWED_HOSTS",
-    default="*",
-    cast=lambda v: [s.strip() for s in v.split(",")],
-)
+# Parse ALLOWED_HOSTS from .env or default to allowing all hosts for mobile & local testing
+_raw_allowed_hosts = config("ALLOWED_HOSTS", default="*", cast=str)
+if _raw_allowed_hosts.strip() == "*":
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = [s.strip() for s in _raw_allowed_hosts.split(",")] + ["*"]
 
 
 # ==========================
@@ -55,15 +56,15 @@ INSTALLED_APPS = [
     # Local Apps
     "apps.accounts",
     "apps.families",
-    "apps.joinrequests",   # added on Day 5
+    "apps.joinrequests",
     "apps.familytree",
     "apps.posts", 
+    "apps.comments",
 ]
 
 # ==========================
 # CUSTOM USER MODEL
 # ==========================
-# Must be set before the first migration is ever run.
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -108,8 +109,6 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # ==========================
 # DATABASE
 # ==========================
-# PostgreSQL is now the active database, configured via the .env file.
-# Values are pulled with decouple.config() so nothing sensitive is hardcoded.
 
 DATABASES = {
     "default": {
@@ -121,14 +120,6 @@ DATABASES = {
         "PORT": config("DB_PORT", default="5432"),
     }
 }
-
-# SQLite fallback (uncomment for quick local testing without Postgres running)
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
 
 # ==========================
 # PASSWORD VALIDATION
@@ -182,16 +173,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ==========================
 # CORS
 # ==========================
-# During early development CORS_ALLOW_ALL_ORIGINS is convenient.
-# Switch to CORS_ALLOWED_ORIGINS (from .env) once a frontend is connected.
 
-CORS_ALLOW_ALL_ORIGINS = config("DEBUG", default=True, cast=bool)
-
-CORS_ALLOWED_ORIGINS = config(
-    "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:3000,http://127.0.0.1:3000",
-    cast=lambda v: [s.strip() for s in v.split(",")],
-)
+CORS_ALLOW_ALL_ORIGINS = True
 
 # ==========================
 # DJANGO REST FRAMEWORK
@@ -231,11 +214,6 @@ SIMPLE_JWT = {
 # ==========================
 # EMAIL
 # ==========================
-# Console backend for local dev — OTP emails print straight to the
-# terminal running `runserver`, no real SMTP setup needed to test.
-# Switch EMAIL_BACKEND to 'django.core.mail.backends.smtp.EmailBackend'
-# and fill in the EMAIL_* values in .env for real email delivery
-# (e.g. Gmail SMTP, SendGrid, etc.).
 
 EMAIL_BACKEND = config(
     "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
@@ -256,3 +234,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API Documentation for FamilyHub",
     "VERSION": "1.0.0",
 }
+
+# settings.py
+# ✅ Correct (using your actual key)
+ABSTRACT_EMAIL_API_KEY = "a1b2c3d4e5f67890123456789abcdef0"

@@ -7,3 +7,6 @@ django-cors-headers
 Pillow
 psycopg2-binary
 python-decouple
+dnspython
+disposable-email-domains
+requests

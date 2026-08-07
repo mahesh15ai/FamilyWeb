@@ -1,3 +1,5 @@
+import requests
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -19,8 +21,37 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         value = value.lower().strip()
+
+        # 1. Check if email is already registered in DB
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError(_("A user with this email already exists."))
+
+        # 2. Check email deliverability & authenticity via Abstract API
+        api_key = getattr(settings, "ABSTRACT_EMAIL_API_KEY", None)
+
+        if api_key:
+            try:
+                response = requests.get(
+                    "https://emailvalidation.abstractapi.com/v1/",
+                    params={"api_key": api_key, "email": value},
+                    timeout=4.0
+                )
+                if response.status_code == 200:
+                    data = response.json()
+
+                    # Check flags returned by Abstract API
+                    is_deliverable = data.get("deliverability") == "DELIVERABLE"
+                    is_disposable = data.get("is_disposable_email", {}).get("value") is True
+                    is_valid_format = data.get("is_valid_format", {}).get("value") is True
+
+                    # Reject fake, undeliverable, or temporary/disposable emails
+                    if not is_valid_format or is_disposable or not is_deliverable:
+                        raise serializers.ValidationError(_("Please enter a valid email."))
+
+            except requests.RequestException:
+                # Fail gracefully if external service times out so legit users aren't blocked
+                pass
+
         return value
 
     def validate_phone_number(self, value):
