@@ -26,8 +26,7 @@ def get_user_family(user):
 def _display_name(user):
     """
     Safe display name for any user — never calls get_full_name(), which
-    doesn't exist on our custom User model (it extends AbstractBaseUser,
-    not AbstractUser). Falls back to the email's local part.
+    doesn't exist on our custom User model. Falls back to the email's local part.
     """
     full_name = getattr(user, "full_name", "") or ""
     return full_name.strip() or user.email.split("@")[0]
@@ -45,7 +44,11 @@ def get_overview_data(family):
     now = timezone.now()
     member_count = membership_services.list_family_members(family=family).count()
     recent_posts = Post.objects.filter(family=family).count() if Post else 0
-    upcoming_events = Event.objects.filter(family=family, date__gte=now.date()).count() if Event else 0
+    upcoming_events = (
+        Event.objects.filter(family=family, start_date__gte=now.date()).count()
+        if Event
+        else 0
+    )
 
     return {
         "family": family.name,
@@ -60,7 +63,6 @@ def get_statistics_data(family):
         return {"posts": 0, "photos": 0, "events": 0, "members": 0}
 
     posts_count = Post.objects.filter(family=family).count() if Post else 0
-    # Fixed: Query photos across the album relation
     photos_count = Photo.objects.filter(album__family=family).count() if Photo else 0
     events_count = Event.objects.filter(family=family).count() if Event else 0
     members_count = membership_services.list_family_members(family=family).count()
@@ -80,21 +82,28 @@ def get_recent_activities_data(family):
     activities = []
 
     if Post:
-        posts = Post.objects.filter(family=family).select_related("author").order_by("-created_at")[:10]
+        posts = (
+            Post.objects.filter(family=family)
+            .select_related("author")
+            .order_by("-created_at")[:10]
+        )
         for p in posts:
             activities.append({
                 "actor": _display_name(p.author),
-                "action": f'posted "{p.content[:25]}..."' if getattr(p, 'content', None) else "created a post",
-                "timestamp": getattr(p, 'created_at', timezone.now()),
+                "action": f'posted "{p.content[:25]}..."' if getattr(p, "content", None) else "created a post",
+                "timestamp": getattr(p, "created_at", timezone.now()),
             })
 
     if not activities:
-        memberships = membership_services.list_family_members(family=family).order_by("-joined_at")[:5]
+        memberships = (
+            membership_services.list_family_members(family=family)
+            .order_by("-joined_at")[:5]
+        )
         for m in memberships:
             activities.append({
                 "actor": _display_name(m.user),
                 "action": "joined the family workspace",
-                "timestamp": getattr(m, 'joined_at', timezone.now()),
+                "timestamp": getattr(m, "joined_at", timezone.now()),
             })
 
     return {"count": len(activities), "results": activities}
@@ -105,8 +114,17 @@ def get_upcoming_events_data(family):
         return {"count": 0, "results": []}
 
     today = timezone.now().date()
-    upcoming = Event.objects.filter(family=family, date__gte=today).order_by("date")[:5]
-    results = [{"id": e.id, "title": e.title, "date": e.date} for e in upcoming]
+    upcoming = Event.objects.filter(family=family, start_date__gte=today).order_by("start_date")[:5]
+    results = [
+        {
+            "id": e.id,
+            "title": e.title,
+            "start_date": e.start_date,
+            "start_time": e.start_time,
+            "location": e.location,
+        }
+        for e in upcoming
+    ]
     return {"count": len(results), "results": results}
 
 

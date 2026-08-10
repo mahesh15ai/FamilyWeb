@@ -29,7 +29,11 @@ class RecentActivitySerializer(serializers.Serializer):
 class UpcomingEventItemSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     title = serializers.CharField()
-    date = serializers.DateField()
+    # Map start_date from dictionary/model to 'date' with fallback
+    date = serializers.DateField(source="start_date", required=False)
+    start_date = serializers.DateField(required=False)
+    start_time = serializers.TimeField(required=False, allow_null=True)
+    location = serializers.CharField(required=False, allow_null=True)
 
 
 class UpcomingEventsSerializer(serializers.Serializer):
