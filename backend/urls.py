@@ -22,6 +22,7 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),
     path("api/albums/", include("apps.albums.urls")),
      path("api/photos/", include("apps.photos.urls")),
+     path("api/videos/", include("apps.videos.urls")),
     # OpenAPI Schema / Swagger UI
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
