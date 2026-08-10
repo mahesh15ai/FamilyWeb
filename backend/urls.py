@@ -15,15 +15,16 @@ urlpatterns = [
     path("api/members/", include("apps.membership.urls")),
     path("api/join-requests/", include("apps.joinrequests.urls")),
     path("api/family-tree/", include("apps.familytree.urls")),
-    path("api/dashboard/", include("apps.dashboard.urls")),  # Added Day 8 Dashboard
+    path("api/dashboard/", include("apps.dashboard.urls")),  # Day 8 Dashboard
+    path("api/posts/", include("apps.posts.urls")),        # Day 9 Posts
+    path("api/comments/", include("apps.comments.urls")),    # Day 10 Comments
+    path("api/", include("apps.likes.urls")),               # Day 11 Likes
     path("api-auth/", include("rest_framework.urls")),
-
+    path("api/albums/", include("apps.albums.urls")),
     # OpenAPI Schema / Swagger UI
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
-    path("api/posts/", include("apps.posts.urls")),
-    path("api/comments/", include("apps.comments.urls")),
 ]
 
 if settings.DEBUG:

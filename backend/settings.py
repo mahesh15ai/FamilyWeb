@@ -60,6 +60,8 @@ INSTALLED_APPS = [
     "apps.familytree",
     "apps.posts", 
     "apps.comments",
+    "apps.likes",
+    'apps.albums',
 ]
 
 # ==========================
