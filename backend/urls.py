@@ -21,10 +21,12 @@ urlpatterns = [
     path("api/", include("apps.likes.urls")),               # Day 11 Likes
     path("api-auth/", include("rest_framework.urls")),
     path("api/albums/", include("apps.albums.urls")),
+     path("api/photos/", include("apps.photos.urls")),
     # OpenAPI Schema / Swagger UI
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+   
 ]
 
 if settings.DEBUG:

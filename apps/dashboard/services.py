@@ -60,7 +60,8 @@ def get_statistics_data(family):
         return {"posts": 0, "photos": 0, "events": 0, "members": 0}
 
     posts_count = Post.objects.filter(family=family).count() if Post else 0
-    photos_count = Photo.objects.filter(family=family).count() if Photo else 0
+    # Fixed: Query photos across the album relation
+    photos_count = Photo.objects.filter(album__family=family).count() if Photo else 0
     events_count = Event.objects.filter(family=family).count() if Event else 0
     members_count = membership_services.list_family_members(family=family).count()
 
