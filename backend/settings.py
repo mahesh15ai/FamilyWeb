@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'apps.photos',
     'apps.videos',  
     'apps.events',
+    'apps.notifications',
 ]
 
 # ==========================
