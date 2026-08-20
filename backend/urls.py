@@ -15,21 +15,22 @@ urlpatterns = [
     path("api/members/", include("apps.membership.urls")),
     path("api/join-requests/", include("apps.joinrequests.urls")),
     path("api/family-tree/", include("apps.familytree.urls")),
-    path("api/dashboard/", include("apps.dashboard.urls")),  # Day 8 Dashboard
-    path("api/posts/", include("apps.posts.urls")),        # Day 9 Posts
-    path("api/comments/", include("apps.comments.urls")),    # Day 10 Comments
-    path("api/", include("apps.likes.urls")),               # Day 11 Likes
+    path("api/dashboard/", include("apps.dashboard.urls")),
+    path("api/posts/", include("apps.posts.urls")),
+    path("api/comments/", include("apps.comments.urls")),
+    path("api/", include("apps.likes.urls")),
     path("api-auth/", include("rest_framework.urls")),
     path("api/albums/", include("apps.albums.urls")),
-     path("api/photos/", include("apps.photos.urls")),
-     path("api/videos/", include("apps.videos.urls")),
-     path("api/events/", include("apps.events.urls")),
-     path('api/notifications/', include('apps.notifications.urls')),
+    path("api/photos/", include("apps.photos.urls")),
+    path("api/videos/", include("apps.videos.urls")),
+    path("api/events/", include("apps.events.urls")),
+    path("api/notifications/", include("apps.notifications.urls")),
+    path("api/chat/", include("apps.chat.urls")),  # Day 18 Chat & Messaging
+
     # OpenAPI Schema / Swagger UI
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
-   
 ]
 
 if settings.DEBUG:
