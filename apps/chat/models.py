@@ -9,18 +9,10 @@ class ChatRoom(models.Model):
         ("direct", "Direct Message"),
     )
 
-    family = models.ForeignKey(
-        Family,
-        on_delete=models.CASCADE,
-        related_name="chat_rooms"
-    )
+    family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name="chat_rooms")
     room_type = models.CharField(max_length=20, choices=ROOM_TYPES, default="group")
     name = models.CharField(max_length=150, blank=True, null=True)
-    participants = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name="chat_rooms",
-        blank=True
-    )
+    participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="chat_rooms", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -32,16 +24,9 @@ class ChatRoom(models.Model):
 
 
 class Message(models.Model):
-    room = models.ForeignKey(
-        ChatRoom,
-        on_delete=models.CASCADE,
-        related_name="messages"
-    )
-    sender = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="sent_messages"
-    )
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sent_messages")
+    reply_to = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="replies")
     content = models.TextField(blank=True, default="")
     image = models.ImageField(upload_to="chat_images/%Y/%m/", blank=True, null=True)
     is_read = models.BooleanField(default=False)

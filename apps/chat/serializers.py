@@ -90,3 +90,63 @@ class ChatRoomSerializer(serializers.ModelSerializer):
                 if other and hasattr(other, "avatar") and other.avatar:
                     return request.build_absolute_uri(other.avatar.url) if request else other.avatar.url
         return None
+    
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from .models import ChatRoom, Message
+
+User = get_user_model()
+
+
+class UserBriefSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "email", "name", "avatar"]
+
+    def get_name(self, obj):
+        name = f"{obj.first_name} {obj.last_name}".strip()
+        return name if name else obj.email.split("@")[0]
+
+    def get_avatar(self, obj):
+        if hasattr(obj, "avatar") and obj.avatar:
+            request = self.context.get("request")
+            return request.build_absolute_uri(obj.avatar.url) if request else obj.avatar.url
+        return None
+
+
+class ReplySnippetSerializer(serializers.ModelSerializer):
+    sender_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Message
+        fields = ["id", "sender_name", "content", "image"]
+
+    def get_sender_name(self, obj):
+        return f"{obj.sender.first_name} {obj.sender.last_name}".strip() or obj.sender.email.split("@")[0]
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    sender = UserBriefSerializer(read_only=True)
+    reply_to = ReplySnippetSerializer(read_only=True)
+    reply_to_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Message
+        fields = ["id", "room", "sender", "reply_to", "reply_to_id", "content", "image", "image_url", "is_read", "created_at"]
+        read_only_fields = ["id", "sender", "created_at"]
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get("request")
+            return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+        return None
+
+    def create(self, validated_data):
+        reply_to_id = validated_data.pop("reply_to_id", None)
+        if reply_to_id:
+            validated_data["reply_to"] = Message.objects.filter(id=reply_to_id).first()
+        return super().create(validated_data)
